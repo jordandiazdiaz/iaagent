@@ -1,54 +1,67 @@
 """Calculadora simple: suma, resta, multiplicación y división."""
 
 import argparse
+import math
 import sys
 
 
-def suma(a, b):
+def sumar(a: float, b: float) -> float:
     return a + b
 
 
-def resta(a, b):
+def restar(a: float, b: float) -> float:
     return a - b
 
 
-def multiplicacion(a, b):
+def multiplicar(a: float, b: float) -> float:
     return a * b
 
 
-def division(a, b):
-    if b == 0:
-        raise ZeroDivisionError("no se puede dividir por cero")
+def dividir(a: float, b: float) -> float:
     return a / b
 
 
 OPERACIONES = {
-    "suma": suma,
-    "resta": resta,
-    "multiplicacion": multiplicacion,
-    "division": division,
+    "sumar": sumar,
+    "restar": restar,
+    "multiplicar": multiplicar,
+    "dividir": dividir,
 }
 
 
-def main(argv=None):
+def numero(texto: str) -> float:
+    try:
+        valor = float(texto)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"número no válido: {texto!r}")
+    if not math.isfinite(valor):
+        raise argparse.ArgumentTypeError(f"número no finito: {texto!r}")
+    return valor
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="calculadora", description="Calculadora simple de línea de comandos."
     )
     parser.add_argument("operacion", choices=OPERACIONES, help="operación a realizar")
-    parser.add_argument("a", type=float, help="primer operando")
-    parser.add_argument("b", type=float, help="segundo operando")
+    parser.add_argument("a", type=numero, help="primer operando")
+    parser.add_argument("b", type=numero, help="segundo operando")
     args = parser.parse_args(argv)
 
     try:
         resultado = OPERACIONES[args.operacion](args.a, args.b)
-    except ZeroDivisionError as error:
-        print(f"Error: {error}", file=sys.stderr)
+    except ZeroDivisionError:
+        print("Error: división por cero", file=sys.stderr)
         return 1
 
-    # Muestra los enteros sin el ".0" final
-    print(int(resultado) if resultado.is_integer() else resultado)
+    if not math.isfinite(resultado):
+        print("Error: resultado fuera de rango", file=sys.stderr)
+        return 1
+
+    # El redondeo vive solo en la presentación: sin ".0" ni ruido de coma flotante
+    print(format(resultado, ".12g"))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
